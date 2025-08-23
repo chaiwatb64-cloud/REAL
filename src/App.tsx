@@ -403,51 +403,43 @@ export default function App() {
             </tr>
           </thead>
           <tbody>
-            {filtered.map(it => (
-              <tr key={it.id} style={{ borderTop:"1px solid #e2e8f0", background: rowBg(it.status) }}>
-                <td style={td}>{it.id}</td>
-                <td style={td}>{it.category}</td>
-                <td style={{ ...td, fontWeight:600 }}>{it.name}</td>
+  {filtered.map((it, idx) => (
+    <tr key={it.id} style={{ borderTop:"1px solid #e2e8f0", background: rowBg(it.status) }}>
+      {/* ✅ ลำดับเริ่มที่ 1 */}
+      <td style={td}>{idx + 1}</td>
 
-                {/* จำนวนคงเหลือ: พิมพ์ได้ + กัน NaN */}
-                <td style={{ ...td, textAlign:"center" }}>
-                  <input
-                    type="number"
-                    value={safeNum(it.qty, 0)}
-                    min={0}
-                    onChange={(e)=>setQtyDirect(it.id, e.target.value)}
-                    style={{
-                      width: 72, textAlign: "center",
-                      fontSize: 16, fontWeight: 800,
-                      borderRadius: 8, border: "1px solid #cbd5e1",
-                      padding: 4, background: "#fff"
-                    }}
-                  />
-                </td>
+      <td style={td}>{it.category}</td>
+      <td style={{ ...td, fontWeight:600 }}>{it.name}</td>
+      <td style={{ ...td, textAlign:"center" }}>
+        <span style={{ fontSize:18, fontWeight:800 }}>{Number(it.qty).toLocaleString()}</span>
+      </td>
+      <td style={td}>{it.unit}</td>
+      <td style={td}>
+        <span style={{ ...chipStyle(it.status), padding:"4px 10px", borderRadius:999, fontSize:12, fontWeight:700 }}>
+          {it.status}
+        </span>
+      </td>
+      <td style={td}>{it.location}</td>
+      <td style={td}>{formatDateThai(it.lastUpdated)}</td>
+      <td style={td}>{(it.checkedBy ?? []).join(", ") || "—"}</td>
+      <td style={{ ...td }}>
+        <div style={{ display:"flex", gap:6, justifyContent:"end" }}>
+          <button onClick={()=>adjustQty(it.id,-1)} style={btnTiny}>−1</button>
+          <button onClick={()=>adjustQty(it.id, 1)} style={btnTiny}>+1</button>
+          <button onClick={()=>openQuickCheck(it)} style={btnTiny}>ตรวจแล้ว</button>
+          <button onClick={()=>remove(it.id)} style={{ ...btnTiny, color:"#be123c" }}>ลบ</button>
+        </div>
+      </td>
+    </tr>
+  ))}
 
-                <td style={td}>{it.unit}</td>
-                <td style={td}>
-                  <span style={{ ...chipStyle(it.status), padding:"4px 10px", borderRadius:999, fontSize:12, fontWeight:700 }}>
-                    {it.status}
-                  </span>
-                </td>
-                <td style={td}>{it.location}</td>
-                <td style={td}>{formatDateThai(it.lastUpdated)}</td>
-                <td style={td}>{(it.checkedBy ?? []).join(", ") || "—"}</td>
-                <td style={{ ...td }}>
-                  <div style={{ display:"flex", gap:6, justifyContent:"end" }}>
-                    <button onClick={()=>adjustQty(it.id,-1)} style={btnTiny}>−1</button>
-                    <button onClick={()=>adjustQty(it.id, 1)} style={btnTiny}>+1</button>
-                    <button onClick={()=>openQuickCheck(it)} style={btnTiny}>ตรวจแล้ว</button>
-                    <button onClick={()=>remove(it.id)} style={{ ...btnTiny, color:"#be123c" }}>ลบ</button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {filtered.length === 0 && (
-              <tr><td colSpan="10" style={{ padding:24, textAlign:"center", color:"#64748b" }}>ไม่พบรายการ</td></tr>
-            )}
-          </tbody>
+  {filtered.length === 0 && (
+    <tr>
+      {/* 📝 ถ้าเป็น TypeScript ให้ใช้ number: colSpan={10} */}
+      <td colSpan={10} style={{ padding:24, textAlign:"center", color:"#64748b" }}>ไม่พบรายการ</td>
+    </tr>
+  )}
+</tbody>
         </table>
       </div>
 
