@@ -122,6 +122,7 @@ export default function App() {
     }
   }, [items]);
 
+
   /* ------- filters ------- */
   const [q, setQ] = useState("");
   const [cat, setCat] = useState("ทั้งหมด");
@@ -245,6 +246,7 @@ export default function App() {
     })();
     return () => { mounted = false; };
   }, []);
+
 
   /* ------- actions ------- */
   const remove = async (id) => {
@@ -582,6 +584,7 @@ function Modal({ children, onClose, title }) {
           <div style={{ fontSize:18, fontWeight:700, marginBottom:10 }}>{title}</div>
           {children}
         </div>
+
       </div>
     </div>
   );
