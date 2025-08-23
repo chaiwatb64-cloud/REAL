@@ -5,6 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 const STORAGE_KEY   = "inventory.thai.lab.v10";
 const COVER_KEY     = "inventory.coverUrl.v1";
 const CHECKERS_KEY  = "inventory.checkers.v1";
+const FIXED_COVER_URL = "/cover.jpg";
 const DEFAULT_CHECKERS = ["Nice","Fah","Anont","Air","Ploy","Aum","Film","Aun","Ning","New","Tong"];
 
 const SUPABASE_URL      = import.meta.env.VITE_SUPABASE_URL;
@@ -134,19 +135,16 @@ export default function App() {
   const [autoStatus, setAutoStatus] = useState(true);
   const [lowThreshold, setLowThreshold] = useState(3); // ≤3 = ใกล้หมด (ค่าเริ่มต้น)
 
-  /* ------- cover ------- */
-  const [coverUrl, setCoverUrl] = useState(() => {
-    try { return localStorage.getItem(COVER_KEY) ?? "/BioMINTech.png"; } catch { return "/BioMINTech.png"; }
-  });
-  const coverInputRef = useRef(null);
-  const onPickCover = (e) => {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    const r = new FileReader();
-    r.onload = () => setCoverUrl(String(r.result));
-    r.readAsDataURL(f);
-  };
-  useEffect(() => { try { localStorage.setItem(COVER_KEY, coverUrl ?? ""); } catch {} }, [coverUrl]);
+const FIXED_COVER_URL = "/cover.jpg";
+<section>
+  <div style={{ position:"relative" }}>
+    <img
+      src={FIXED_COVER_URL}
+      alt="Cover"
+      style={{ width:"100%", maxHeight:260, objectFit:"cover" }}
+    />
+  </div>
+</section>
 
   /* ------- checkers (local list) ------- */
   const [checkers, setCheckers] = useState(() => {
@@ -355,22 +353,38 @@ export default function App() {
                 style={{ width:60, padding:6, borderRadius:8, border:"1px solid #cbd5e1" }} />
             </label>
             <button onClick={()=>setMembersOpen(true)} style={btnGhost}>จัดการผู้ตรวจ</button>
-            <input ref={coverInputRef} onChange={onPickCover} type="file" accept="image/*" style={{ display:"none" }} />
-            <button onClick={()=>coverInputRef.current?.click()} style={btnGhost}>ตั้งค่า Cover</button>
+{/* Cover (fixed) */}
+<section>
+  <div
+    style={{
+      position: "sticky",
+      top: 0,
+      zIndex: 0,
+      width: "100%",
+      textAlign: "center",
+      padding: "12px 0",
+    }}
+  >
+    <img
+      src={FIXED_COVER_URL}
+      alt="BioMINTech Cover"
+      style={{
+        maxWidth: "1200px",    // ปรับตามต้องการ
+        width: "100%",
+        height: "auto",
+        display: "inline-block",
+        borderRadius: 8,
+        boxShadow: "0 2px 12px rgba(0,0,0,.08)",
+      }}
+    />
+  </div>
+</section>
+
+
           </div>
         </div>
       </div>
 
-      {/* Cover */}
-      <section>
-        {coverUrl ? (
-          <div style={{ position:"relative" }}>
-            <img src={coverUrl} alt="BioMINTech Cover" style={{ width:"100%", maxHeight:260, objectFit:"cover" }} />
-          </div>
-        ) : (
-          <div style={{ height:120, display:"grid", placeItems:"center", color:"#475569" }}>เพิ่มรูปปกโดยกด “ตั้งค่า Cover”</div>
-        )}
-      </section>
 
       {/* Summary pastel */}
       <div style={{ maxWidth:1200, margin:"12px auto", display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(220px,1fr))", gap:12 }}>
