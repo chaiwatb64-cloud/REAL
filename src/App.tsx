@@ -6,6 +6,9 @@ const STORAGE_KEY   = "inventory.thai.lab.v10";
 const COVER_KEY = "coverUrl";
 const DEFAULT_COVER_URL = "/cover.jpg";
 
+const AUTO_STATUS_KEY = "settings:autoStatus";
+const LOW_THRESHOLD_KEY = "settings:lowThreshold";
+
 const DEFAULT_CHECKERS = ["Nice","Fah","Anont","Air","Ploy","Aum","Film","Aun","Ning","New","Tong"];
 
 const SUPABASE_URL      = import.meta.env.VITE_SUPABASE_URL;
@@ -138,9 +141,42 @@ const [coverUrl] = React.useState<string>(() => {
   const [loc, setLoc] = useState("ทั้งหมด");
   const [onlyLow, setOnlyLow] = useState(false);
 
+
   /* ------- status rule ------- */
-  const [autoStatus, setAutoStatus] = useState(true);
-  const [lowThreshold, setLowThreshold] = useState(3); // ≤3 = ใกล้หมด (ค่าเริ่มต้น)
+  const [autoStatus, setAutoStatus] = useState<boolean>(() => {
+  try {
+    const raw = localStorage.getItem(AUTO_STATUS_KEY);
+    return raw == null ? true : (raw === "1" || raw === "true");
+  } catch { return true; }
+});
+
+const [lowThreshold, setLowThreshold] = useState<number>(() => {
+  try {
+    const raw = localStorage.getItem(LOW_THRESHOLD_KEY);
+    const n = Number(raw);
+    return Number.isFinite(n) && n >= 1 ? n : 3;
+  } catch { return 3; }
+});
+useEffect(() => {
+  try { localStorage.setItem(AUTO_STATUS_KEY, autoStatus ? "1" : "0"); } catch {}
+}, [autoStatus]);
+
+useEffect(() => {
+  try { localStorage.setItem(LOW_THRESHOLD_KEY, String(lowThreshold)); } catch {}
+}, [lowThreshold]);
+useEffect(() => {
+  const onStorage = (e: StorageEvent) => {
+    if (e.key === AUTO_STATUS_KEY && e.newValue != null) {
+      setAutoStatus(e.newValue === "1" || e.newValue === "true");
+    }
+    if (e.key === LOW_THRESHOLD_KEY && e.newValue != null) {
+      const n = Number(e.newValue);
+      if (Number.isFinite(n) && n >= 1) setLowThreshold(n);
+    }
+  };
+  window.addEventListener("storage", onStorage);
+  return () => window.removeEventListener("storage", onStorage);
+}, []);
 
 
 
@@ -164,6 +200,10 @@ const [coverUrl] = React.useState<string>(() => {
     empty: items.filter(i=>i.status==="หมด").length,
     normal: items.filter(i=>i.status==="ปกติ").length,
   }), [items]);
+
+// แผนที่เก็บค่าที่กำลังแก้ไขของแต่ละแถว (key = id เป็นสตริง)
+const [editQty, setEditQty] = useState<Record<string, string>>({});
+
 
   /* ------- recalc status on rule change ------- */
   useEffect(() => {
@@ -374,8 +414,8 @@ return (
           alt="BioMINTech Cover"
           style={{
             maxWidth: "1200px",
-            width: "100%",
-            height: "260px",
+            width: "120",
+            height: "100%",
             objectFit: "cover",
             display: "inline-block",
             borderRadius: 8,
@@ -388,7 +428,7 @@ return (
             inset: 0,
             borderRadius: 8,
             background:
-              "linear-gradient(to top, rgba(0,0,0,.55), rgba(0,0,0,.25), rgba(0,0,0,0))",
+              "linear-gradient(to top, rgba(0,0,0,.30), rgba(0,0,0,.15), rgba(0,0,0,0))",
             pointerEvents: "none",
             zIndex: 1,
           }}
@@ -397,29 +437,28 @@ return (
           style={{
             position: "absolute",
             left: 24,
-            bottom: 12,
+            bottom: 0,
             color: "#fff",
             textAlign: "left",
-            textShadow: "0 2px 8px rgba(0,0,0,.35)",
+            textShadow: "0 2px 8px rgba(0,0,0,15)",
             zIndex: 2,
           }}
         >
-          <div style={{ fontSize: 12, textTransform: "uppercase", opacity: .9, letterSpacing: 1 }}>
+          <div style={{ fontSize: 14, textTransform: "uppercase", opacity: .9, letterSpacing: 1 }}>
             Laboratory
           </div>
-          <div style={{ fontSize: 28, fontWeight: 800 }}>BioMINTech</div>
-          <div style={{ fontSize: 16, opacity: .9 }}>
+          <div style={{ fontSize: 35, fontWeight: 800 }}>BioMINTech</div>
+          <div style={{ fontSize: 20, opacity: .9 }}>
             Biochemical Molecular Interactions and Nucleic Acid Technologies
           </div>
         </div>
       </div>
     </section>
 
-
-
           </div>
         </div>
       </div>
+
 
 
       {/* Summary pastel */}
@@ -620,7 +659,7 @@ function FieldNumber({ label, value, onChange, min=0 }) {
 function Modal({ children, onClose, title }) {
   return (
     <div style={{ position:"fixed", inset:0, zIndex:50 }}>
-      <div onClick={onClose} style={{ position:"absolute", inset:0, background:"rgba(0,0,0,.3)" }} />
+      <div onClick={onClose} style={{ position:"absolute", inset:0, background:"rgba(0,0,0,.5)" }} />
       <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center", padding:16 }}>
         <div style={{ width:"100%", maxWidth:560, background:"#fff", border:"1px solid #e5e7eb", borderRadius:16, padding:16 }}>
           <div style={{ fontSize:18, fontWeight:700, marginBottom:10 }}>{title}</div>
