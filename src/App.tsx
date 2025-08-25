@@ -3,9 +3,9 @@ import { createClient } from "@supabase/supabase-js";
 
 /* ========= CONFIG & HELPERS ========= */
 const STORAGE_KEY   = "inventory.thai.lab.v10";
-const COVER_KEY     = "inventory.coverUrl.v1";
-const CHECKERS_KEY  = "inventory.checkers.v1";
-const FIXED_COVER_URL = "/cover.jpg";
+const COVER_KEY = "coverUrl";
+const DEFAULT_COVER_URL = "/cover.jpg";
+
 const DEFAULT_CHECKERS = ["Nice","Fah","Anont","Air","Ploy","Aum","Film","Aun","Ning","New","Tong"];
 
 const SUPABASE_URL      = import.meta.env.VITE_SUPABASE_URL;
@@ -117,11 +117,18 @@ export default function App() {
     }
     return [];
   });
+
   useEffect(() => {
     if (!hasSupabase) {
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); } catch {}
     }
   }, [items]);
+
+const [coverUrl] = React.useState<string>(() => {
+  const saved = localStorage.getItem(COVER_KEY);
+  return saved && saved.trim() ? saved : DEFAULT_COVER_URL;
+});
+
 
 
   /* ------- filters ------- */
@@ -135,16 +142,7 @@ export default function App() {
   const [autoStatus, setAutoStatus] = useState(true);
   const [lowThreshold, setLowThreshold] = useState(3); // ≤3 = ใกล้หมด (ค่าเริ่มต้น)
 
-const FIXED_COVER_URL = "/cover.jpg";
-<section>
-  <div style={{ position:"relative" }}>
-    <img
-      src={FIXED_COVER_URL}
-      alt="Cover"
-      style={{ width:"100%", maxHeight:260, objectFit:"cover" }}
-    />
-  </div>
-</section>
+
 
   /* ------- checkers (local list) ------- */
   const [checkers, setCheckers] = useState(() => {
@@ -334,51 +332,89 @@ const FIXED_COVER_URL = "/cover.jpg";
   const btnTiny   = { padding:"4px 8px", borderRadius:8, border:"1px solid #cbd5e1", background:"#fff", fontSize:12 };
   const td        = { padding:"8px 10px", whiteSpace:"nowrap" };
 
-  /* ========= RENDER ========= */
-  return (
-    <div style={{ minHeight:"100vh", background:"#f8fafc", color:"#0f172a", display:"flex", flexDirection:"column" }}>
-      {/* Header */}
-      <div style={{ position:"sticky", top:0, zIndex:10, backdropFilter:"blur(6px)", background:"rgba(255,255,255,.8)", borderBottom:"1px solid #e5e7eb" }}>
-        <div style={{ maxWidth:1200, margin:"0 auto", padding:"12px 16px", display:"flex", gap:12, alignItems:"center", justifyContent:"space-between", flexWrap:"wrap" }}>
-          <div style={{ fontSize:22, fontWeight:700 }}>ระบบติดตามสต๊อก (BioMINTech){hasSupabase ? " • Online" : " • Local"}</div>
-          <div style={{ display:"flex", gap:8, alignItems:"center", flexWrap:"wrap" }}>
-            <button onClick={()=>setAddOpen(true)} style={btnPri}>+ เพิ่มรายการ</button>
-            <button onClick={()=>setOnlyLow(v=>!v)} style={{ ...btnGhost, background: onlyLow ? "#fffbeb" : "#fff" }}>เฉพาะใกล้หมด/หมด</button>
-            <label style={{ display:"inline-flex", alignItems:"center", gap:8, fontSize:14 }}>
-              ปรับสถานะอัตโนมัติ <input type="checkbox" checked={autoStatus} onChange={(e)=>setAutoStatus(e.target.checked)} />
-            </label>
-            <label style={{ display:"inline-flex", alignItems:"center", gap:8, fontSize:14 }}>
-              เกณฑ์ ≤ <input type="number" min={1} value={lowThreshold}
-                onChange={(e)=>setLowThreshold(Math.max(1, safeNum(e.target.value, 3)))}
-                style={{ width:60, padding:6, borderRadius:8, border:"1px solid #cbd5e1" }} />
-            </label>
-            <button onClick={()=>setMembersOpen(true)} style={btnGhost}>จัดการผู้ตรวจ</button>
-{/* Cover (fixed) */}
-<section>
-  <div
-    style={{
-      position: "sticky",
-      top: 0,
-      zIndex: 0,
-      width: "100%",
-      textAlign: "center",
-      padding: "12px 0",
-    }}
-  >
-    <img
-      src={FIXED_COVER_URL}
-      alt="BioMINTech Cover"
-      style={{
-        maxWidth: "1200px",    // ปรับตามต้องการ
-        width: "100%",
-        height: "auto",
-        display: "inline-block",
-        borderRadius: 8,
-        boxShadow: "0 2px 12px rgba(0,0,0,.08)",
-      }}
-    />
-  </div>
-</section>
+
+/* ========= RENDER ========= */
+return (
+  <div style={{ minHeight:"100vh", overflowY: "auto", background:"#f8fafc", color:"#0f172a", display:"flex", flexDirection:"column" }}>
+    {/* Header */}
+    <div style={{ position:"sticky", top:0, zIndex:10, backdropFilter:"blur(6px)", background:"rgba(255,255,255,.8)", borderBottom:"1px solid #e5e7eb" }}>
+      <div style={{ maxWidth:1200, margin:"0 auto", padding:"12px 16px", display:"flex", gap:12, alignItems:"center", justifyContent:"space-between", flexWrap:"wrap" }}>
+        <div style={{ fontSize:22, fontWeight:700 }}>
+          ระบบติดตามสต๊อก (BioMINTech){hasSupabase ? " • Online" : " • Local"}
+        </div>
+        <div style={{ display:"flex", gap:8, alignItems:"center", flexWrap:"wrap" }}>
+          <button onClick={()=>setAddOpen(true)} style={btnPri}>+ เพิ่มรายการ</button>
+          <button onClick={()=>setOnlyLow(v=>!v)} style={{ ...btnGhost, background: onlyLow ? "#fffbeb" : "#fff" }}>
+            เฉพาะใกล้หมด/หมด
+          </button>
+          <label style={{ display:"inline-flex", alignItems:"center", gap:8, fontSize:14 }}>
+            ปรับสถานะอัตโนมัติ <input type="checkbox" checked={autoStatus} onChange={(e)=>setAutoStatus(e.target.checked)} />
+          </label>
+          <label style={{ display:"inline-flex", alignItems:"center", gap:8, fontSize:14 }}>
+            เกณฑ์ ≤ <input type="number" min={1} value={lowThreshold}
+              onChange={(e)=>setLowThreshold(Math.max(1, safeNum(e.target.value, 3)))}
+              style={{ width:60, padding:6, borderRadius:8, border:"1px solid #cbd5e1" }} />
+          </label>
+          <button onClick={()=>setMembersOpen(true)} style={btnGhost}>จัดการผู้ตรวจ</button>
+
+
+
+    {/* >>> วาง Cover ที่นี่ (นอก Header) <<< */}
+    <section>
+      <div
+        style={{
+          position: "relative",
+          width: "100%",
+          textAlign: "center",
+          padding: "12px 0",
+        }}
+      >
+        <img
+          src={coverUrl}
+          alt="BioMINTech Cover"
+          style={{
+            maxWidth: "1200px",
+            width: "100%",
+            height: "260px",
+            objectFit: "cover",
+            display: "inline-block",
+            borderRadius: 8,
+            boxShadow: "0 2px 12px rgba(0,0,0,.08)",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            borderRadius: 8,
+            background:
+              "linear-gradient(to top, rgba(0,0,0,.55), rgba(0,0,0,.25), rgba(0,0,0,0))",
+            pointerEvents: "none",
+            zIndex: 1,
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            left: 24,
+            bottom: 12,
+            color: "#fff",
+            textAlign: "left",
+            textShadow: "0 2px 8px rgba(0,0,0,.35)",
+            zIndex: 2,
+          }}
+        >
+          <div style={{ fontSize: 12, textTransform: "uppercase", opacity: .9, letterSpacing: 1 }}>
+            Laboratory
+          </div>
+          <div style={{ fontSize: 28, fontWeight: 800 }}>BioMINTech</div>
+          <div style={{ fontSize: 16, opacity: .9 }}>
+            Biochemical Molecular Interactions and Nucleic Acid Technologies
+          </div>
+        </div>
+      </div>
+    </section>
+
 
 
           </div>
